@@ -1,0 +1,38 @@
+#based from https://github.com/OpenNMT/OpenNMT-py/blob/master/config/config-transformer-base-1GPU.yml
+save_data: lexical-model-data/run/example
+src_vocab: lexical-model-data/run/vocab.src
+tgt_vocab: lexical-model-data/run/vocab.tgt
+overwrite: False
+
+# Corpus opts:
+data:
+    corpus_1:
+        path_src: lexical-model-data/src-train.txt
+        path_tgt: lexical-model-data/tgt-train.txt
+    valid:
+        path_src: lexical-model-data/src-val.txt
+        path_tgt: lexical-model-data/tgt-val.txt
+
+
+# Train on a single GPU
+world_size: 1
+gpu_ranks: [0]
+
+dropout: 0.1
+label_smoothing: 0.1
+
+param_init: 0
+param_init_glorot: true
+vocab_size_multiple: 8
+num_workers: 8
+bucket_size: 1024
+batch_size: 256
+valid_batch_size: 128
+
+
+# Where to save the checkpoints
+save_model: lexical-model-data/run_default/model
+save_checkpoint_steps: 500
+train_steps: 40000
+valid_steps: 500
+report_every: 50
