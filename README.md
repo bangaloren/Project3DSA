@@ -50,3 +50,58 @@ After being trained, the language server can be run with the below command.
 ```
 python3 WebServer.py
 ```
+
+
+## Frontend Server Setup
+
+![圖片](https://github.com/bangaloren/Project3DSA/assets/115109992/e6835e1f-e55c-474d-ab73-13fa3208fcd8)
+
+
+We are using an ubuntu 20.04 VPS to run the front-end server.
+
+### 1. Move the Files over to the Server.
+
+You want to copy the folder labeled 'Website' into the server and start the webserver by running the following commands.
+
+```
+cd Website/
+python3 FrontendSite.py
+```
+
+This will startup a webserver at port 5000.
+
+### 2. Setup Nginx
+
+```
+sudo apt update
+sudo apt install nginx
+```
+
+After installing Nginx you want to create a configuration file to route traffic from either port 80 or 443 to port 5000.
+You can replace 'talk.kanda.ru' with your own domain name.
+
+```
+sudo nano /etc/nginx/sites-available/talk.kanda.ru
+sudo ln -s /etc/nginx/sites-available/talk.kanda.ru /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl restart nginx
+```
+
+### 3. Setup Let's Encrypt on the VPS
+
+
+You can follow the below tutorial to setup HTTPS for the server.
+https://www.digitalocean.com/community/tutorials/how-to-secure-nginx-with-let-s-encrypt-on-ubuntu-22-04
+
+
+### 4. Setup the Reverse Proxy to the Language Server
+
+You want to open up a terminal from your language server and write the following command.
+
+```
+ssh -R 5000:localhost:5000 -p [ssh port] -o ServerAliveInterval=60 [username]@[frontend-server-ip]
+```
+
+
+
+
