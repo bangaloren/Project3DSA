@@ -48,7 +48,7 @@ To train the lexical model, navigate to the `lexical-model/` directory. Inside, 
 After being trained, the language server can be run with the below command.
 
 ```
-python3 WebServer.py
+nohup python3 WebServer.py
 ```
 
 
@@ -65,7 +65,7 @@ You want to copy the folder labeled 'Website' into the server and start the webs
 
 ```
 cd Website/
-python3 FrontendSite.py
+nohup python3 FrontendSite.py
 ```
 
 This will startup a webserver at port 5000.
