@@ -1,3 +1,7 @@
+
+![圖片](https://github.com/bangaloren/Project3DSA/assets/115109992/59106bc4-18f0-481f-bfed-c8d90705297b)
+
+
 # TalKannada: ASR Webserver For Kannada
 
 This repository contains all the code needed to run the server. However, due to the data required to train the model being several gigabytes large, developers will need to download significant portions of the data to replicate our results.
