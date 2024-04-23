@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Record Audio</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            color: #333;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .fa-microphone, .fa-trash, .fa-upload {
+            cursor: pointer;
+            font-size: 24px;
+            color: blue;
+        }
+        .recording {
+            color: red;
+        }
+        .delete-active {
+            color: red;
+        }
+        .delete-inactive {
+            color: black;
+        }
+        .section {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+        .transcriptions {
+            background-color: #f9f9f9;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        .upload-label {
+            cursor: pointer;
+            color: blue;
+            font-size: 24px;
+        }
+        .transcriptions div {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .transcriptions select, .transcriptions input[type="number"] {
+            padding: 8px;
+            font-size: 16px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        #transcribe-button {
+            margin-top: 10px;
+            padding: 8px 16px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+<h1>TalKannada: Kannada STT System</h1>
+    <div class="section transcriptions">
+        <h2>Transcriptions</h2>
+        <p id="transcription-text">Transcribed text will appear here...</p>
+        <div>
+            <button id="transcribe-button" onclick="transcribeAudio()">Transcribe</button>
+            <select id="splitterType">
+                <option value="best first">Best First</option>
+                <option value="beam search">Beam Search</option>
+            </select>
+            <input type="number" id="width" placeholder="Width" value="5">
+        </div>
+    </div>
+    <div class="section controls">
+        <i class="fa fa-microphone" onclick="toggleRecording()"></i>
+        <label for="file-upload" class="fa fa-upload upload-label"></label>
+        <input id="file-upload" type="file" accept=".wav" onchange="loadUploadedFile()">
+        <i class="fa fa-trash delete-inactive" onclick="deleteRecording()"></i>
+    </div>
+    <div class="section">
+        <h2>Recorded Audio:</h2>
+        <audio id="audioPlayback" controls style="display: none;"></audio>
+    </div>
+
+    <script>
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
+        let hasRecording = false;
+        let uploadedFile; // To hold the reference to the uploaded file
+
+        function toggleRecording() {
+            if (!isRecording) {
+                startRecording();
+            } else {
+                stopRecording();
+            }
+        }
+
+        function startRecording() {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    let options = { mimeType: 'audio/wav' };
+                    if (MediaRecorder.isTypeSupported(options.mimeType)) {
+                        mediaRecorder = new MediaRecorder(stream, options);
+                    } else {
+                        console.error(options.mimeType + " is not supported, defaulting to a supported type.");
+                        mediaRecorder = new MediaRecorder(stream);
+                    }
+                    mediaRecorder.start();
+                    mediaRecorder.addEventListener("dataavailable", event => {
+                        audioChunks.push(event.data);
+                    });
+                    document.querySelector('.fa-microphone').classList.add('recording');
+                    isRecording = true;
+                    updateDeleteButton();
+                })
+                .catch(error => console.error("Error accessing media devices.", error));
+        }
+
+        function stopRecording() {
+            mediaRecorder.stop();
+            mediaRecorder.addEventListener("stop", () => {
+                const audioBlob = new Blob(audioChunks, { 'type' : 'audio/wav' }); // Set MIME type as audio/wav
+                uploadedFile = audioBlob; // Set the blob as uploaded file for transcription
+                const audioUrl = URL.createObjectURL(audioBlob);
+                const audioPlayback = document.getElementById('audioPlayback');
+                audioPlayback.src = audioUrl;
+                audioPlayback.style.display = 'block';
+                audioPlayback.play();
+                audioChunks = [];
+                document.querySelector('.fa-microphone').classList.remove('recording');
+                isRecording = false;
+                hasRecording = true;
+                updateDeleteButton();
+            });
+        }
+
+
+        function deleteRecording() {
+            if (hasRecording) {
+                const audioPlayback = document.getElementById('audioPlayback');
+                audioPlayback.src = '';
+                audioPlayback.style.display = 'none';
+                uploadedFile = null; // Clear the uploaded file reference
+                hasRecording = false;
+                updateDeleteButton();
+            }
+        }
+
+        function updateDeleteButton() {
+            const deleteButton = document.querySelector('.fa-trash');
+            if (hasRecording) {
+                deleteButton.classList.add('delete-active');
+                deleteButton.classList.remove('delete-inactive');
+            } else {
+                deleteButton.classList.add('delete-inactive');
+                deleteButton.classList.remove('delete-active');
+            }
+        }
+
+        function loadUploadedFile() {
+            const file = document.getElementById('file-upload').files[0];
+            uploadedFile = file; // Set the file as uploaded file for transcription
+            const audioPlayback = document.getElementById('audioPlayback');
+            audioPlayback.src = URL.createObjectURL(file);
+            audioPlayback.style.display = 'block';
+            audioPlayback.play();
+            hasRecording = true;
+            updateDeleteButton();
+        }
+
+    function transcribeAudio() {
+        if (!uploadedFile) {
+            alert('No audio file available for transcription.');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', uploadedFile, 'recorded_audio.wav'); // Filename with .wav extension
+        // Get values from the UI and append them to the form data
+        const splitterType = document.getElementById('splitterType').value;
+        const width = document.getElementById('width').value;
+        formData.append('splitterType', splitterType);
+        formData.append('width', width);
+
+        fetch('http://0.0.0.0:5000/transcribe', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data && data.transcription) {
+                document.getElementById('transcription-text').textContent = data.transcription;
+            } else {
+                console.error('Transcription data is missing or invalid:', data);
+                document.getElementById('transcription-text').textContent = 'Error: Transcription data is invalid.';
+            }
+        })
+        .catch(error => {
+            console.error('Error transcribing the audio:', error);
+            document.getElementById('transcription-text').textContent = 'Error transcribing the audio. See console for details.';
+        });
+    }
+
+
+    </script>
+</body>
+</html>
