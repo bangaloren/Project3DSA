@@ -20,13 +20,13 @@ The raw audio files, totaling over 20GB, can be downloaded from the links below.
 2. [https://www.openslr.org/79/](https://www.openslr.org/79/) (Attribution-ShareAlike 4.0 International)
 
 The File structure of our data folder looks like this:
-'''
+```
 ❯ ls -a
 . kn_in_female_trans line_index_male.tsv probabilities
 .. kn_in_male makeTSV.py testTrain
 combined_sentences.tsv kn_in_male_trans mile_kannada_test text
 kn_in_female line_index_female.tsv mile_kannada_train
-'''
+```
 
 ### 2. Installing Local Dependencies
 
